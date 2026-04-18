@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Board — Сезон Весна 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-page:      #0a0a0f;
+  --bg-panel:     #13131a;
+  --bg-card:      #1a1a24;
+  --bg-card-h:    #1e1e2c;
+  --border:       #2a2d3a;
+  --border-l:     #363a50;
+  --text-main:    #f0f1f6;
+  --text-muted:   #8b8fa8;
+  --text-dim:     #50546a;
+  --btn-bg:       #1e1e2a;
+  --btn-h:        #26263a;
+  --btn-bdr:      #333648;
+  --accent:       #6366f1;
+  --danger:       #ef4444;
+  --success:      #22c55e;
+  --gold:         #FBBF24;
+
+  --c-craft:  #E94560;
+  --c-body:   #4ADE80;
+  --c-circle: #FBBF24;
+  --c-fun:    #A78BFA;
+  --c-growth: #60A5FA;
+
+  --mono: 'JetBrains Mono', 'Consolas', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+  --r: 8px; --rs: 5px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg-page);color:var(--text-main);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── LAYOUT ── */
+#app{max-width:1440px;margin:0 auto;padding:24px 20px 80px}
+section{margin-bottom:36px}
+
+.sec-title{
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── HEADER ── */
+#header{margin-bottom:36px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.hdr-left{flex:1;min-width:200px}
+
+#season-name{
+  font-family:var(--mono);font-size:clamp(20px,4vw,34px);font-weight:700;
+  letter-spacing:-0.5px;cursor:pointer;display:inline-block;line-height:1.1;
+  transition:color .15s
+}
+#season-name:hover{color:var(--accent)}
+#season-subtitle{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:6px;letter-spacing:1px}
+
+.hdr-right{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+
+/* undo/redo */
+.ud-group{display:flex;gap:3px;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rs);padding:2px 4px}
+.ud-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;
+  font-family:var(--mono);font-size:13px;width:28px;height:26px;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.ud-btn:hover:not(:disabled){background:var(--btn-h);color:var(--text-main)}
+.ud-btn:disabled{opacity:.25;cursor:default}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 13px;
+  background:var(--btn-bg);border:1px solid var(--btn-bdr);color:var(--text-main);
+  font-family:var(--sans);font-size:12px;font-weight:500;border-radius:var(--rs);
+  cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap
+}
+.btn:hover{background:var(--btn-h);border-color:var(--border-l)}
+.btn.ac{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.ac:hover{background:#5254d4;border-color:#5254d4}
+.btn.dn{background:transparent;border-color:var(--danger);color:var(--danger)}
+.btn.dn:hover{background:rgba(239,68,68,.1)}
+.btn.ok{background:transparent;border-color:var(--success);color:var(--success)}
+.btn.ok:hover{background:rgba(34,197,94,.1)}
+.btn.sm{padding:4px 9px;font-size:11px}
+
+/* ── OATH ── */
+.oath-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--bg-panel);border:1px solid var(--border);
+  border-radius:var(--r);cursor:pointer;transition:background .15s
+}
+.oath-hdr:hover{background:var(--bg-card)}
+.oath-row{display:flex;align-items:center;gap:10px}
+.oath-arrow{font-family:var(--mono);font-size:10px;color:var(--text-muted);transition:transform .2s;display:inline-block}
+.oath-arrow.o{transform:rotate(90deg)}
+.oath-lbl{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim)}
+
+#oath-body{display:none;padding:16px;background:var(--bg-panel);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r)}
+#oath-body.o{display:block}
+.oath-list{list-style:none;counter-reset:oath;display:flex;flex-direction:column;gap:10px}
+.oath-item{display:flex;gap:12px;align-items:flex-start;counter-increment:oath;color:var(--text-muted);font-size:13px;line-height:1.6}
+.oath-item::before{
+  content:counter(oath);font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);
+  background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:4px;
+  width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px
+}
+
+/* ── XP ── */
+.xp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:900px){.xp-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.xp-grid{grid-template-columns:1fr}}
+.xp-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.xp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.xp-name{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.xp-lv{font-family:var(--mono);font-size:10px;color:var(--text-muted)}
+.xp-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.xp-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.xp-txt{font-family:var(--mono);font-size:10px;color:var(--text-dim)}
+
+/* ════════════════════════════════════
+   ЗОНА ФОКУСА — выразительный стиль
+   ════════════════════════════════════ */
+#focus-section{
+  position:relative;
+  border-radius:12px;
+  padding:20px;
+  background:
+    linear-gradient(135deg,rgba(99,102,241,.06) 0%,rgba(251,191,36,.04) 100%),
+    var(--bg-panel);
+  border:1px solid rgba(251,191,36,.25);
+  box-shadow:0 0 0 1px rgba(251,191,36,.08),inset 0 1px 0 rgba(255,255,255,.03);
+  margin-bottom:36px;
+  transition:border-color .2s,box-shadow .2s
+}
+#focus-section.drag-active{
+  border-color:rgba(251,191,36,.6);
+  box-shadow:0 0 20px rgba(251,191,36,.15),0 0 0 1px rgba(251,191,36,.2)
+}
+
+.focus-hdr{
+  display:flex;align-items:center;gap:12px;margin-bottom:16px
+}
+.focus-icon{font-size:16px;filter:drop-shadow(0 0 6px rgba(251,191,36,.6))}
+.focus-label{
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);text-shadow:0 0 12px rgba(251,191,36,.4)
+}
+.focus-count{
+  font-family:var(--mono);font-size:10px;color:var(--text-dim);
+  background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);
+  padding:2px 8px;border-radius:20px
+}
+.focus-hint{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px}
+
+.focus-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:12px;
+  min-height:96px;
+}
+.focus-drop-zone{
+  display:flex;align-items:center;justify-content:center;
+  border:2px dashed rgba(251,191,36,.2);border-radius:var(--r);
+  color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;
+  padding:28px;transition:border-color .2s,color .2s;min-height:96px
+}
+.focus-drop-zone.hot{border-color:rgba(251,191,36,.55);color:var(--gold)}
+
+/* Карточка В ФОКУСЕ — увеличенный вариант */
+.ach-card{
+  background:var(--bg-card);border:1px solid var(--border);border-left:3px solid transparent;
+  border-radius:var(--r);padding:12px 14px;cursor:pointer;
+  transition:background .15s,transform .1s,box-shadow .15s;position:relative;user-select:none
+}
+.ach-card:hover{background:var(--bg-card-h);transform:translateY(-1px)}
+.ach-card.dragging{opacity:.35;transform:scale(.97)}
+.ach-card.drag-over{outline:2px dashed var(--accent);outline-offset:2px}
+.ach-card.completed .ach-title{text-decoration:line-through;color:var(--text-muted)}
+.ach-card.completed{opacity:.7}
+
+/* Карточка внутри фокуса */
+.focus-grid .ach-card{
+  border-left-width:3px;
+  background:rgba(26,26,36,.9);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)
+}
+.focus-grid .ach-card:hover{
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 4px 16px rgba(0,0,0,.3)
+}
+.focus-grid .ach-card .ach-title{font-size:14px;font-weight:600;letter-spacing:-.1px}
+
+.ach-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.ach-title{font-size:13px;font-weight:600;line-height:1.4;flex:1}
+.ach-pin-btn{
+  background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;
+  padding:2px;opacity:0;transition:opacity .15s,color .15s;flex-shrink:0;line-height:1
+}
+.ach-card:hover .ach-pin-btn{opacity:1}
+.ach-pin-btn.on{opacity:1;color:var(--gold);text-shadow:0 0 8px rgba(251,191,36,.6)}
+.ach-desc{font-size:12px;color:var(--text-muted);margin-bottom:8px;line-height:1.5}
+.ach-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ach-stars{font-size:11px;color:var(--gold);letter-spacing:1px}
+.ach-badge{
+  font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.06);color:var(--text-muted)
+}
+.ach-card.completed .ach-badge{background:rgba(34,197,94,.15);color:var(--success)}
+.ach-date{font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:6px}
+
+/* ── AXES GALLERY ── */
+.axes-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:start}
+@media(max-width:1100px){.axes-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.axes-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.axes-grid{grid-template-columns:1fr}}
+
+.axis-col{
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px 12px;min-height:120px;transition:border-color .15s,background .15s
+}
+.axis-col.drop-t{border-color:var(--accent);background:rgba(99,102,241,.05)}
+.axis-col-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.axis-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.axis-name{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.axis-cnt{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto}
+.axis-cards{display:flex;flex-direction:column;gap:8px;min-height:40px}
+
+/* ── COUNTERS ── */
+.cnt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.cnt-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.cnt-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
+.cnt-name{font-size:13px;font-weight:600;flex:1}
+.cnt-ctrl{display:flex;align-items:center;gap:6px}
+.cnt-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);min-width:36px;text-align:center}
+.btn-plus{
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:var(--accent);
+  border-radius:var(--rs);cursor:pointer;font-size:18px;font-weight:700;transition:background .15s;line-height:1
+}
+.btn-plus:hover{background:rgba(99,102,241,.3)}
+.cnt-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.cnt-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+.cnt-tiers{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--text-dim)}
+.cnt-tier.hit{color:var(--success);font-weight:700}
+.cnt-foot{display:flex;justify-content:flex-end;margin-top:10px;gap:6px}
+
+/* ── BUCKET ── */
+.bkt-add{display:flex;gap:8px;margin-bottom:12px}
+.bkt-add input{
+  flex:1;background:var(--bg-panel);border:1px solid var(--border);
+  color:var(--text-main);font-family:var(--sans);font-size:13px;
+  padding:8px 12px;border-radius:var(--rs);outline:none;transition:border-color .15s
+}
+.bkt-add input:focus{border-color:var(--accent)}
+.bkt-add input::placeholder{color:var(--text-dim)}
+.bkt-list{display:flex;flex-direction:column;gap:6px}
+.bkt-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rs);
+  cursor:grab;transition:background .15s
+}
+.bkt-item:hover{background:var(--bg-card)}
+.bkt-item.dragging{opacity:.4;cursor:grabbing}
+.bkt-item.drag-over{outline:2px dashed var(--accent);outline-offset:2px}
+.bkt-grip{color:var(--text-dim);font-size:12px;cursor:grab;flex-shrink:0}
+.bkt-txt{flex:1;font-size:13px}
+.bkt-act{display:flex;gap:5px;opacity:0;transition:opacity .15s}
+.bkt-item:hover .bkt-act{opacity:1}
+
+/* ── RECENT ── */
+.rec-list{display:flex;flex-direction:column;gap:8px}
+.rec-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rs)}
+.rec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rec-title{flex:1;font-size:13px;font-weight:500}
+.rec-axis{font-family:var(--mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.rec-date{font-family:var(--mono);font-size:10px;color:var(--text-dim)}
+
+/* ── MODAL ── */
+.modal-back{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+  backdrop-filter:blur(5px);z-index:1000;align-items:center;justify-content:center;padding:20px
+}
+.modal-back.o{display:flex}
+.modal-box{
+  background:#15161e;border:1px solid var(--border-l);border-radius:12px;
+  width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6)
+}
+.m-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:20px}
+.m-field{margin-bottom:16px}
+.m-field label{display:block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px}
+.m-field input,.m-field select,.m-field textarea{
+  width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text-main);
+  font-family:var(--sans);font-size:13px;padding:9px 12px;border-radius:var(--rs);outline:none;
+  transition:border-color .15s;resize:vertical
+}
+.m-field input:focus,.m-field select:focus,.m-field textarea:focus{border-color:var(--accent)}
+.m-field select option{background:#15161e}
+.diff-row{display:flex;gap:8px}
+.diff-btn{
+  flex:1;padding:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);
+  border-radius:var(--rs);cursor:pointer;text-align:center;font-size:14px;transition:all .15s
+}
+.diff-btn:hover{border-color:var(--border-l)}
+.diff-btn.on{border-color:var(--gold);color:var(--gold);background:rgba(251,191,36,.1)}
+.m-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.m-acts-l{display:flex;gap:8px;flex:1}
+.m-acts-r{display:flex;gap:8px}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#26263a;border:1px solid var(--border-l);color:var(--text-main);
+  font-family:var(--mono);font-size:12px;padding:10px 18px;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:opacity .2s,transform .2s;
+  pointer-events:none;z-index:9999;white-space:nowrap
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── WELCOME ── */
+#welcome{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:2000;align-items:center;justify-content:center;padding:20px}
+#welcome.o{display:flex}
+.wlc-box{background:#15161e;border:1px solid var(--border-l);border-radius:14px;padding:32px;max-width:440px;width:100%;text-align:center}
+.wlc-icon{font-size:44px;margin-bottom:16px;filter:drop-shadow(0 0 12px rgba(251,191,36,.5))}
+.wlc-title{font-family:var(--mono);font-size:15px;font-weight:700;margin-bottom:12px}
+.wlc-text{font-size:14px;color:var(--text-muted);line-height:1.75;margin-bottom:24px}
+
+.empty-st{text-align:center;padding:24px 16px;color:var(--text-dim);font-family:var(--mono);font-size:10px;letter-spacing:1px}
+input[type=file]{display:none}
+.ns-sep{border-top:1px solid var(--border);padding-top:24px;margin-top:40px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<div id="header">
+  <div class="hdr-top">
+    <div class="hdr-left">
+      <div id="season-name">СЕЗОН ВЕСНА 2026</div>
+      <div id="season-subtitle">Глава: Приключение</div>
+    </div>
+    <div class="hdr-right">
+      <!-- Undo / Redo -->
+      <div class="ud-group">
+        <button class="ud-btn" id="btn-undo" title="Отменить (Ctrl+Z)" onclick="QB.undo()" disabled>↩</button>
+        <button class="ud-btn" id="btn-redo" title="Повторить (Ctrl+Y)" onclick="QB.redo()" disabled>↪</button>
+      </div>
+      <button class="btn" onclick="QB.exportJSON()">↓ Экспорт</button>
+      <button class="btn" onclick="QB.importClick()">↑ Импорт</button>
+      <button class="btn ac" onclick="QB.openAddAch()">+ Достижение</button>
+      <button class="btn" onclick="QB.openAddCounter()">+ Счётчик</button>
+      <button class="btn" onclick="QB.openAddBucket()">+ Bucket</button>
+      <button class="btn" onclick="QB.openNewSeason()">⟳ Сезон</button>
+    </div>
+  </div>
+</div>
+
+<!-- OATH -->
+<section id="oath-section">
+  <div class="oath-hdr" onclick="QB.toggleOath()">
+    <div class="oath-row">
+      <span class="oath-arrow" id="oath-arrow">▶</span>
+      <span class="oath-lbl">Обет</span>
+    </div>
+    <button class="btn sm" onclick="event.stopPropagation();QB.openEditOath()">Редактировать</button>
+  </div>
+  <div id="oath-body"></div>
+</section>
+
+<!-- XP -->
+<section>
+  <div class="sec-title">Прогресс по осям</div>
+  <div class="xp-grid" id="xp-grid"></div>
+</section>
+
+<!-- FOCUS ZONE -->
+<div id="focus-section"
+  ondragover="QB.focusDragOver(event)"
+  ondragleave="QB.focusDragLeave(event)"
+  ondrop="QB.focusDrop(event)">
+  <div class="focus-hdr">
+    <span class="focus-icon">⚡</span>
+    <span class="focus-label">В фокусе</span>
+    <span class="focus-count" id="focus-count">0 / 5</span>
+    <span class="focus-hint">↓ перетащи сюда</span>
+  </div>
+  <div class="focus-grid" id="focus-grid"></div>
+</div>
+
+<!-- ACHIEVEMENTS GALLERY -->
+<section>
+  <div class="sec-title">Галерея достижений</div>
+  <div class="axes-grid" id="axes-grid"></div>
+</section>
+
+<!-- COUNTERS -->
+<section>
+  <div class="sec-title">Счётчики</div>
+  <div class="cnt-grid" id="cnt-grid"></div>
+</section>
+
+<!-- BUCKET -->
+<section>
+  <div class="sec-title">Bucket — хочу попробовать</div>
+  <div class="bkt-add">
+    <input type="text" id="bkt-input" placeholder="Добавить идею..." onkeydown="QB.bktKeydown(event)">
+    <button class="btn" onclick="QB.addBucket()">Добавить</button>
+  </div>
+  <div class="bkt-list" id="bkt-list"></div>
+</section>
+
+<!-- RECENT -->
+<section>
+  <div class="sec-title">Последние победы</div>
+  <div class="rec-list" id="rec-list"></div>
+</section>
+
+<div class="ns-sep">
+  <button class="btn" onclick="QB.openNewSeason()">Начать новый сезон</button>
+</div>
+</div><!-- #app -->
+
+<!-- MODALS -->
+
+<!-- Achievement -->
+<div class="modal-back" id="m-ach" onclick="QB.closeM('m-ach')">
+<div class="modal-box" onclick="event.stopPropagation()">
+  <div class="m-title" id="m-ach-title">Достижение</div>
+  <div class="m-field"><label>Название</label><input type="text" id="ach-title" placeholder="Что хочешь сделать?"></div>
+  <div class="m-field"><label>Описание</label><textarea id="ach-desc" rows="2" placeholder="Подробности..."></textarea></div>
+  <div class="m-field"><label>Ось</label><select id="ach-axis"></select></div>
+  <div class="m-field">
+    <label>Сложность</label>
+    <div class="diff-row" id="diff-row">
+      <div class="diff-btn" data-d="1" onclick="QB.setDiff(1)">★</div>
+      <div class="diff-btn" data-d="2" onclick="QB.setDiff(2)">★★</div>
+      <div class="diff-btn" data-d="3" onclick="QB.setDiff(3)">★★★</div>
+    </div>
+  </div>
+  <div class="m-field" id="note-field"><label>Заметка</label><textarea id="ach-note" rows="2" placeholder="Что получилось?"></textarea></div>
+  <div class="m-acts">
+    <div class="m-acts-l">
+      <button class="btn ok" id="btn-done" onclick="QB.completeAch()">✓ Сделал!</button>
+      <button class="btn" id="btn-reac" onclick="QB.reactivateAch()" style="display:none">↩ Вернуть</button>
+    </div>
+    <div class="m-acts-r">
+      <button class="btn dn" id="btn-del-ach" onclick="QB.deleteAch()">Удалить</button>
+      <button class="btn" onclick="QB.saveAch()">Сохранить</button>
+      <button class="btn" onclick="QB.closeM('m-ach')">✕</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Oath -->
+<div class="modal-back" id="m-oath" onclick="QB.closeM('m-oath')">
+<div class="modal-box" onclick="event.stopPropagation()">
+  <div class="m-title">Редактировать обет</div>
+  <div id="oath-fields"></div>
+  <div class="m-acts"><div class="m-acts-r">
+    <button class="btn ac" onclick="QB.saveOath()">Сохранить</button>
+    <button class="btn" onclick="QB.closeM('m-oath')">Отмена</button>
+  </div></div>
+</div>
+</div>
+
+<!-- Counter -->
+<div class="modal-back" id="m-cnt" onclick="QB.closeM('m-cnt')">
+<div class="modal-box" onclick="event.stopPropagation()">
+  <div class="m-title" id="m-cnt-title">Счётчик</div>
+  <div class="m-field"><label>Название</label><input type="text" id="cnt-name" placeholder="Что считаем?"></div>
+  <div class="m-field"><label>Тиры (через запятую)</label><input type="text" id="cnt-tiers" placeholder="5, 15, 30"></div>
+  <div class="m-field" id="cnt-cur-f"><label>Текущее значение</label><input type="number" id="cnt-cur" min="0" value="0"></div>
+  <div class="m-acts">
+    <div class="m-acts-l"><button class="btn dn" id="btn-del-cnt" onclick="QB.deleteCnt()" style="display:none">Удалить</button></div>
+    <div class="m-acts-r">
+      <button class="btn ac" onclick="QB.saveCnt()">Сохранить</button>
+      <button class="btn" onclick="QB.closeM('m-cnt')">Отмена</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Season -->
+<div class="modal-back" id="m-season" onclick="QB.closeM('m-season')">
+<div class="modal-box" onclick="event.stopPropagation()">
+  <div class="m-title" id="m-season-title">Сезон</div>
+  <div class="m-field"><label>Название сезона</label><input type="text" id="s-name" placeholder="Сезон Лето 2026"></div>
+  <div class="m-field"><label>Подзаголовок</label><input type="text" id="s-sub" placeholder="Глава: ..."></div>
+  <div id="s-warn" style="display:none;padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:12px;color:#ef4444;margin-bottom:12px">
+    Текущий сезон будет заархивирован. Достижения сбросятся в active, счётчики обнулятся.
+  </div>
+  <div class="m-acts"><div class="m-acts-r">
+    <button class="btn ac" id="btn-save-s" onclick="QB.saveSeason()">Сохранить</button>
+    <button class="btn" onclick="QB.closeM('m-season')">Отмена</button>
+  </div></div>
+</div>
+</div>
+
+<div id="toast"></div>
+<div id="welcome" class="o">
+  <div class="wlc-box">
+    <div class="wlc-icon">⚔️</div>
+    <div class="wlc-title">QUEST BOARD ЗАГРУЖЕН</div>
+    <div class="wlc-text">Это твой Quest Board на Сезон Весна 2026.<br>Карточки висят — гриндишь когда подвернётся.<br>Перетаскивай в ⚡ Фокус чтобы выделить приоритет.</div>
+    <button class="btn ac" onclick="QB.closeWelcome()" style="width:100%;justify-content:center;padding:12px">Начать</button>
+  </div>
+</div>
+
+<input type="file" id="import-input" accept=".json" onchange="QB.importJSON(event)">
+
+<script>
+/* ════════════════════════════════════════════════════
+   QUEST BOARD — core logic
+   ════════════════════════════════════════════════════ */
+const QB = (() => {
+
+/* ── SEED ── */
+const SEED = {
+  schemaVersion: 1,
+  season: { name: 'СЕЗОН ВЕСНА 2026', startedAt: '2026-04-18', subtitle: 'Глава: Приключение' },
+  oath: [
+    'Иду туда, где мне интересно, по фану. Если среда развивает — бонус. Что из этого получится — побочный продукт, а не цель.',
+    '"Иду кайфовать" — установка по умолчанию на всё публичное: свидания, питчи, знакомства, выступления, соцсети. Цель всегда фан, результат всегда бонус.',
+    'Одно действие — несколько слоёв. Выбираю только то, где сходятся ремесло, тело, круг, фан, рост. Что не сходится — отсеиваю без сожаления.',
+    'Представляюсь из новой главы. Я solo-разработчик, делаю [ABERRATION], строю FEIGIN ENTERTAINMENT. Студент — уточнение, не главное слово.'
+  ],
+  axes: [
+    { id:'craft',  name:'Ремесло', color:'#E94560' },
+    { id:'body',   name:'Тело',    color:'#4ADE80' },
+    { id:'circle', name:'Круг',    color:'#FBBF24' },
+    { id:'fun',    name:'Фан',     color:'#A78BFA' },
+    { id:'growth', name:'Рост',    color:'#60A5FA' }
+  ],
+  achievements:[
+    // CIRCLE
+    {id:uid(),title:'Первая импровизация',description:'Сходить на первый урок импро',axis:'circle',difficulty:1,status:'active',pinned:true,completedAt:null,note:'',order:0},
+    {id:uid(),title:'Заговорил с красивой незнакомкой на улице',description:'',axis:'circle',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:1},
+    {id:uid(),title:'Первое свидание в новой главе',description:'',axis:'circle',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:2},
+    {id:uid(),title:'Поход с друзьями на природу',description:'',axis:'circle',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:3},
+    {id:uid(),title:'Организовал встречу или мероприятие с друзьями',description:'',axis:'circle',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:4},
+    {id:uid(),title:'Ночной разговор с близким другом о важном',description:'',axis:'circle',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:5},
+    {id:uid(),title:'Дискотека без цели (только кайфануть)',description:'',axis:'circle',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:6},
+    {id:uid(),title:'Волонтёрство с задачей',description:'',axis:'circle',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:7},
+    // FUN
+    {id:uid(),title:'Первый урок сёрфинга',description:'',axis:'fun',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:0},
+    {id:uid(),title:'Съездить в Петру',description:'',axis:'fun',difficulty:3,status:'active',pinned:false,completedAt:null,note:'',order:1},
+    {id:uid(),title:'Ночь в дюнах',description:'',axis:'fun',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:2},
+    {id:uid(),title:'Лекция в Тель-Авиве (музыка/майндфулнес)',description:'',axis:'fun',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:3},
+    {id:uid(),title:'Концерт или выставка в одиночку',description:'',axis:'fun',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:4},
+    {id:uid(),title:'Съездить в новый город на день',description:'',axis:'fun',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:5},
+    {id:uid(),title:'Попробовать керамику или незнакомый мастер-класс',description:'',axis:'fun',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:6},
+    // CRAFT
+    {id:uid(),title:'Написал первому стримеру',description:'Написать первому стримеру-хоррор летсплееру',axis:'craft',difficulty:2,status:'active',pinned:true,completedAt:null,note:'',order:0},
+    {id:uid(),title:'Запустил Discord-сообщество [ABERRATION]',description:'',axis:'craft',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:1},
+    {id:uid(),title:'Первая играбельная демо-сцена',description:'',axis:'craft',difficulty:3,status:'active',pinned:false,completedAt:null,note:'',order:2},
+    {id:uid(),title:'Первый питч Steam-стримеру',description:'',axis:'craft',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:3},
+    {id:uid(),title:'Публичный пост о [ABERRATION] в соцсетях',description:'',axis:'craft',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:4},
+    {id:uid(),title:'Первая продажа в Steam',description:'',axis:'craft',difficulty:3,status:'active',pinned:false,completedAt:null,note:'',order:5},
+    {id:uid(),title:'Локализация игры на 5 языков закончена',description:'',axis:'craft',difficulty:3,status:'active',pinned:false,completedAt:null,note:'',order:6},
+    {id:uid(),title:'Next Fest октябрь 2026 — участие',description:'',axis:'craft',difficulty:3,status:'active',pinned:false,completedAt:null,note:'',order:7},
+    {id:uid(),title:"1000 wishlist'ов",description:'',axis:'craft',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:8},
+    {id:uid(),title:"8000 wishlist'ов",description:'',axis:'craft',difficulty:3,status:'active',pinned:false,completedAt:null,note:'',order:9},
+    // BODY
+    {id:uid(),title:'Новый PR в Convict Conditioning',description:'',axis:'body',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:0},
+    {id:uid(),title:'20 км пешком за день',description:'',axis:'body',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:1},
+    {id:uid(),title:'Утро в море 7 дней подряд',description:'',axis:'body',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:2},
+    {id:uid(),title:'Месяц регулярных тренировок без пропусков',description:'',axis:'body',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:3},
+    {id:uid(),title:'Попробовать новый вид активности (сёрф, скалолазание, бокс)',description:'',axis:'body',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:4},
+    // GROWTH
+    {id:uid(),title:'Прочитать книгу о дизайне полностью',description:'',axis:'growth',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:0},
+    {id:uid(),title:'Закончить курс актёрского мастерства',description:'',axis:'growth',difficulty:3,status:'active',pinned:true,completedAt:null,note:'',order:1},
+    {id:uid(),title:'Пролистать 3 книги по архитектуре/дизайну',description:'',axis:'growth',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:2},
+    {id:uid(),title:'Посетить конференцию в своей области',description:'',axis:'growth',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:3},
+    {id:uid(),title:'Посмотреть и разобрать 10 горрор-летсплеев',description:'',axis:'growth',difficulty:2,status:'active',pinned:false,completedAt:null,note:'',order:4},
+    {id:uid(),title:'Изучить новую технику кино/звука',description:'',axis:'growth',difficulty:1,status:'active',pinned:false,completedAt:null,note:'',order:5}
+  ],
+  counters:[
+    {id:uid(),name:'Новых людей заговорил',current:0,tiers:[5,15,30]},
+    {id:uid(),name:'Мест посещено',current:0,tiers:[5,15,30]},
+    {id:uid(),name:'Ивентов (лекции, встречи, мастер-классы)',current:0,tiers:[3,10,25]},
+    {id:uid(),name:'Свиданий',current:0,tiers:[1,5,15]},
+    {id:uid(),name:'Книг/статей пролистано',current:0,tiers:[5,15,30]}
+  ],
+  bucket:[
+    {id:uid(),text:'Петра'},{id:uid(),text:'Керамика'},{id:uid(),text:'Яффо ночью'},
+    {id:uid(),text:'Сёрфинг с тренером'},{id:uid(),text:'Актёрское мастерство (полный курс)'},
+    {id:uid(),text:'Импровизация'},{id:uid(),text:'Волонтёрство с задачей'},
+    {id:uid(),text:'Дискотека с другом'},{id:uid(),text:'Музыкальные лекции в Тель-Авиве'},
+    {id:uid(),text:'Лекция про майндфулнес'},{id:uid(),text:'Боулдеринг / скалодром'},
+    {id:uid(),text:'Поход выходного дня'},{id:uid(),text:'Визит на арт-выставку в одиночку'}
+  ]
+};
+
+/* ── STATE ── */
+let S = null;
+let history = [], histIdx = -1;
+let oathOpen = false;
+let editAchId = null, curDiff = 1;
+let editCntId = null;
+let isNewSeason = false;
+let dragId = null, dragFrom = null; // dragFrom: 'focus' | 'axis'
+let bktDragId = null;
+
+const KEY = 'quest_board_v1';
+const ARC = 'quest_board_archive';
+
+/* ── HELPERS ── */
+function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+
+function pushHistory(){
+  history = history.slice(0, histIdx+1);
+  history.push(JSON.stringify(S));
+  if(history.length > 60) history.shift();
+  histIdx = history.length - 1;
+  updateUD();
+}
+
+function commit(){
+  pushHistory();
+  save();
+  render();
+}
+
+function updateUD(){
+  document.getElementById('btn-undo').disabled = (histIdx <= 0);
+  document.getElementById('btn-redo').disabled = (histIdx >= history.length-1);
+}
+
+function undo(){
+  if(histIdx <= 0) return;
+  histIdx--;
+  S = JSON.parse(history[histIdx]);
+  save(); render(); updateUD();
+  toast('Отменено');
+}
+
+function redo(){
+  if(histIdx >= history.length-1) return;
+  histIdx++;
+  S = JSON.parse(history[histIdx]);
+  save(); render(); updateUD();
+  toast('Повторено');
+}
+
+function axColor(id){ const a=S.axes.find(x=>x.id===id); return a?a.color:'#6366f1'; }
+function axName(id){ const a=S.axes.find(x=>x.id===id); return a?a.name:id; }
+function stars(n){ return '★'.repeat(n)+'☆'.repeat(3-n); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){ if(!d)return''; const[y,m,day]=d.split('-'); return `${day}.${m}.${y}`; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function getXP(axId){ return S.achievements.filter(a=>a.axis===axId&&a.status==='completed').reduce((s,a)=>s+a.difficulty,0); }
+function getLevel(xp){
+  if(xp>=50) return{level:5,min:50,max:null};
+  if(xp>=30) return{level:4,min:30,max:50};
+  if(xp>=15) return{level:3,min:15,max:30};
+  if(xp>=5)  return{level:2,min:5, max:15};
+  return{level:1,min:0,max:5};
+}
+
+function toast(msg,dur=2000){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+/* ── RENDER ── */
+function render(){
+  renderHeader(); renderOath(); renderXP();
+  renderFocus(); renderAxes();
+  renderCounters(); renderBucket(); renderRecent();
+}
+
+function renderHeader(){
+  document.getElementById('season-name').textContent=S.season.name;
+  document.getElementById('season-subtitle').textContent=S.season.subtitle;
+}
+
+function renderOath(){
+  const body=document.getElementById('oath-body');
+  const arr=document.getElementById('oath-arrow');
+  body.classList.toggle('o',oathOpen);
+  arr.classList.toggle('o',oathOpen);
+  body.innerHTML='<ul class="oath-list">'+S.oath.map(t=>`<li class="oath-item">${esc(t)}</li>`).join('')+'</ul>';
+}
+
+function renderXP(){
+  document.getElementById('xp-grid').innerHTML=S.axes.map(ax=>{
+    const xp=getXP(ax.id);
+    const{level,min,max}=getLevel(xp);
+    const pct=max?Math.min(100,((xp-min)/(max-min))*100):100;
+    const txt=max?`${xp-min}/${max-min} XP`:`${xp} XP — MAX`;
+    return`<div class="xp-card">
+      <div class="xp-top">
+        <span class="xp-name" style="color:${ax.color}">${ax.name}</span>
+        <span class="xp-lv">LVL ${level}</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" style="width:${pct}%;background:${ax.color}"></div></div>
+      <div class="xp-txt">${txt}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── FOCUS ZONE ── */
+function renderFocus(){
+  const pinned=S.achievements.filter(a=>a.pinned&&a.status==='active');
+  document.getElementById('focus-count').textContent=`${pinned.length} / 5`;
+  const grid=document.getElementById('focus-grid');
+  if(!pinned.length){
+    grid.innerHTML='<div class="focus-drop-zone" id="focus-empty">Перетащи карточку сюда чтобы взять в фокус</div>';
+  } else {
+    grid.innerHTML=pinned.map(a=>achCard(a,true)).join('');
+  }
+}
+
+/* ── AXES GALLERY ── */
+function renderAxes(){
+  document.getElementById('axes-grid').innerHTML=S.axes.map(ax=>{
+    const achs=S.achievements.filter(a=>a.axis===ax.id).sort((a,b)=>a.order-b.order);
+    const done=achs.filter(a=>a.status==='completed').length;
+    return`<div class="axis-col" data-axis="${ax.id}"
+      ondragover="QB.axisDragOver(event,'${ax.id}')"
+      ondragleave="QB.axisDragLeave(event)"
+      ondrop="QB.axisDrop(event,'${ax.id}')">
+      <div class="axis-col-hdr">
+        <div class="axis-dot" style="background:${ax.color}"></div>
+        <span class="axis-name" style="color:${ax.color}">${ax.name}</span>
+        <span class="axis-cnt">${done}/${achs.length}</span>
+      </div>
+      <div class="axis-cards" data-axis="${ax.id}">
+        ${achs.length?achs.map(a=>achCard(a,false)).join(''):'<div class="empty-st">Пусто</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function achCard(a, inFocus){
+  const color=axColor(a.axis);
+  const isPinned=a.pinned&&a.status==='active';
+  const borderColor=a.status==='completed'?color:(isPinned?color:'transparent');
+  const glow=isPinned&&inFocus?`box-shadow:0 0 0 1px ${color}33,0 4px 20px ${color}22`:''
+  const completedLine=a.completedAt?`<div class="ach-date">✓ ${fmtDate(a.completedAt)}</div>`:'';
+  const pinIcon=isPinned?'★':'☆';
+  const pinTitle=isPinned?'Убрать из фокуса':'Добавить в фокус';
+  return`<div class="ach-card ${a.status}" data-id="${a.id}"
+    style="border-left-color:${borderColor};${glow}"
+    draggable="true"
+    ondragstart="QB.achDragStart(event,'${a.id}','${inFocus?'focus':'axis'}')"
+    ondragover="QB.achDragOver(event)"
+    ondragleave="QB.achDragLeave(event)"
+    ondrop="QB.achDrop(event,'${a.id}')"
+    ondragend="QB.achDragEnd(event)"
+    onclick="QB.openEditAch('${a.id}')">
+    <div class="ach-top">
+      <div class="ach-title">${esc(a.title)}</div>
+      ${a.status==='active'?`<button class="ach-pin-btn ${isPinned?'on':''}" title="${pinTitle}"
+        onclick="event.stopPropagation();QB.togglePin('${a.id}')">${pinIcon}</button>`:''}
+    </div>
+    ${a.description?`<div class="ach-desc">${esc(a.description)}</div>`:''}
+    <div class="ach-foot">
+      <span class="ach-stars">${stars(a.difficulty)}</span>
+      <span class="ach-badge">${a.status==='completed'?'выполнено':'активно'}</span>
+    </div>
+    ${completedLine}
+  </div>`;
+}
+
+/* ── DRAG & DROP ── */
+
+// Achievement drag
+function achDragStart(e,id,from){
+  dragId=id; dragFrom=from;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',JSON.stringify({id,from}));
+}
+function achDragOver(e){
+  e.preventDefault(); e.stopPropagation();
+  e.currentTarget.classList.add('drag-over');
+  e.dataTransfer.dropEffect='move';
+}
+function achDragLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+function achDrop(e,targetId){
+  e.preventDefault(); e.stopPropagation();
+  e.currentTarget.classList.remove('drag-over');
+  if(!dragId||dragId===targetId) return;
+  const src=S.achievements.find(x=>x.id===dragId);
+  const tgt=S.achievements.find(x=>x.id===targetId);
+  if(!src||!tgt) return;
+  if(src.axis===tgt.axis){
+    const tmp=src.order; src.order=tgt.order; tgt.order=tmp;
+  } else {
+    src.axis=tgt.axis; src.order=tgt.order-0.5;
+    S.achievements.filter(a=>a.axis===src.axis).sort((a,b)=>a.order-b.order).forEach((a,i)=>a.order=i);
+  }
+  commit();
+}
+function achDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  dragId=null; dragFrom=null;
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+
+// Axis column drop — also handles unpin from focus
+function axisDragOver(e,axId){
+  e.preventDefault();
+  e.currentTarget.classList.add('drop-t');
+  e.dataTransfer.dropEffect='move';
+}
+function axisDragLeave(e){ e.currentTarget.classList.remove('drop-t'); }
+function axisDrop(e,axId){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drop-t');
+  let id=dragId;
+  if(!id){ try{ const d=JSON.parse(e.dataTransfer.getData('text/plain')); id=d.id; }catch(ex){} }
+  if(!id) return;
+  const src=S.achievements.find(x=>x.id===id);
+  if(!src) return;
+  const wasInFocus=src.pinned&&src.status==='active';
+  // If dragged from focus to same axis or different axis — just unpin
+  if(src.pinned) src.pinned=false;
+  if(src.axis!==axId){
+    src.axis=axId;
+    const maxOrd=S.achievements.filter(a=>a.axis===axId&&a.id!==id).reduce((m,a)=>Math.max(m,a.order),-1);
+    src.order=maxOrd+1;
+  }
+  commit();
+  if(wasInFocus) toast('Убрано из фокуса');
+}
+
+// Focus zone drop — pins the card
+function focusDragOver(e){
+  e.preventDefault();
+  document.getElementById('focus-section').classList.add('drag-active');
+  const empty=document.getElementById('focus-empty');
+  if(empty) empty.classList.add('hot');
+  e.dataTransfer.dropEffect='move';
+}
+function focusDragLeave(e){
+  // only remove highlight if we left the section entirely
+  if(!document.getElementById('focus-section').contains(e.relatedTarget)){
+    document.getElementById('focus-section').classList.remove('drag-active');
+    const empty=document.getElementById('focus-empty');
+    if(empty) empty.classList.remove('hot');
+  }
+}
+function focusDrop(e){
+  e.preventDefault();
+  document.getElementById('focus-section').classList.remove('drag-active');
+  const empty=document.getElementById('focus-empty');
+  if(empty) empty.classList.remove('hot');
+  let id=dragId;
+  if(!id){ try{ const d=JSON.parse(e.dataTransfer.getData('text/plain')); id=d.id; }catch(ex){} }
+  if(!id) return;
+  const src=S.achievements.find(x=>x.id===id);
+  if(!src||src.status!=='active') return;
+  if(src.pinned){ toast('Уже в фокусе'); return; }
+  const pinCount=S.achievements.filter(a=>a.pinned&&a.status==='active').length;
+  if(pinCount>=5){ toast('В фокусе уже 5 квестов — максимум'); return; }
+  src.pinned=true;
+  commit();
+  toast('⚡ Добавлено в фокус');
+}
+
+// Bucket drag
+function bktDragStart(e,id){
+  bktDragId=id;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+}
+function bktDragOver(e){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function bktDragLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+function bktDrop(e,tgtId){
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  if(!bktDragId||bktDragId===tgtId) return;
+  const si=S.bucket.findIndex(b=>b.id===bktDragId);
+  const ti=S.bucket.findIndex(b=>b.id===tgtId);
+  if(si===-1||ti===-1) return;
+  const[item]=S.bucket.splice(si,1); S.bucket.splice(ti,0,item);
+  commit();
+}
+function bktDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  bktDragId=null;
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+
+/* ── OATH ── */
+function toggleOath(){ oathOpen=!oathOpen; renderOath(); }
+function openEditOath(){
+  document.getElementById('oath-fields').innerHTML=S.oath.map((r,i)=>`
+    <div class="m-field"><label>Правило ${i+1}</label>
+    <textarea id="or-${i}" rows="3">${esc(r)}</textarea></div>`).join('');
+  openM('m-oath');
+}
+function saveOath(){
+  S.oath=S.oath.map((_,i)=>{ const el=document.getElementById(`or-${i}`); return el?el.value.trim():S.oath[i]; });
+  commit(); closeM('m-oath'); toast('Обет сохранён');
+}
+
+/* ── ACHIEVEMENT MODAL ── */
+function fillAxisSel(sel){
+  document.getElementById('ach-axis').innerHTML=S.axes.map(a=>`<option value="${a.id}" ${a.id===sel?'selected':''}>${a.name}</option>`).join('');
+}
+function openAddAch(pre={}){
+  editAchId=null;
+  document.getElementById('m-ach-title').textContent='Новое достижение';
+  document.getElementById('ach-title').value=pre.title||'';
+  document.getElementById('ach-desc').value=pre.desc||'';
+  document.getElementById('ach-note').value='';
+  curDiff=pre.difficulty||1; fillAxisSel(pre.axis||S.axes[0].id); updateDiffUI();
+  document.getElementById('btn-done').style.display='none';
+  document.getElementById('btn-reac').style.display='none';
+  document.getElementById('btn-del-ach').style.display='none';
+  document.getElementById('note-field').style.display='none';
+  openM('m-ach');
+}
+function openEditAch(id){
+  const a=S.achievements.find(x=>x.id===id); if(!a) return;
+  editAchId=id;
+  document.getElementById('m-ach-title').textContent='Редактировать достижение';
+  document.getElementById('ach-title').value=a.title;
+  document.getElementById('ach-desc').value=a.description;
+  document.getElementById('ach-note').value=a.note||'';
+  curDiff=a.difficulty; fillAxisSel(a.axis); updateDiffUI();
+  document.getElementById('note-field').style.display='block';
+  document.getElementById('btn-del-ach').style.display='inline-flex';
+  document.getElementById('btn-done').style.display=a.status==='active'?'inline-flex':'none';
+  document.getElementById('btn-reac').style.display=a.status==='completed'?'inline-flex':'none';
+  openM('m-ach');
+}
+function setDiff(n){ curDiff=n; updateDiffUI(); }
+function updateDiffUI(){ document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('on',+b.dataset.d===curDiff)); }
+
+function saveAch(){
+  const title=document.getElementById('ach-title').value.trim();
+  if(!title){ toast('Введи название'); return; }
+  const axis=document.getElementById('ach-axis').value;
+  const desc=document.getElementById('ach-desc').value.trim();
+  const note=document.getElementById('ach-note').value.trim();
+  if(editAchId){
+    const a=S.achievements.find(x=>x.id===editAchId);
+    if(a){ a.title=title; a.description=desc; a.axis=axis; a.difficulty=curDiff; a.note=note; }
+    toast('Сохранено');
+  } else {
+    const maxO=S.achievements.filter(x=>x.axis===axis).reduce((m,x)=>Math.max(m,x.order),-1);
+    S.achievements.push({id:uid(),title,description:desc,axis,difficulty:curDiff,status:'active',pinned:false,completedAt:null,note,order:maxO+1});
+    toast('Достижение добавлено');
+  }
+  commit(); closeM('m-ach');
+}
+function completeAch(){
+  if(!editAchId) return;
+  const a=S.achievements.find(x=>x.id===editAchId); if(!a) return;
+  a.note=document.getElementById('ach-note').value.trim();
+  a.status='completed'; a.completedAt=today(); a.pinned=false;
+  commit(); closeM('m-ach');
+  toast(`✓ Выполнено! +${a.difficulty} XP → ${axName(a.axis)}`);
+}
+function reactivateAch(){
+  if(!editAchId) return;
+  const a=S.achievements.find(x=>x.id===editAchId); if(!a) return;
+  a.status='active'; a.completedAt=null;
+  commit(); closeM('m-ach'); toast('Возвращено в активные');
+}
+function deleteAch(){
+  if(!editAchId||!confirm('Удалить достижение?')) return;
+  S.achievements=S.achievements.filter(x=>x.id!==editAchId);
+  commit(); closeM('m-ach'); toast('Удалено');
+}
+function togglePin(id){
+  const a=S.achievements.find(x=>x.id===id); if(!a) return;
+  if(!a.pinned){
+    const cnt=S.achievements.filter(x=>x.pinned&&x.status==='active').length;
+    if(cnt>=5){ toast('В фокусе уже 5 квестов'); return; }
+  }
+  a.pinned=!a.pinned;
+  commit();
+  toast(a.pinned?'⚡ Добавлено в фокус':'Убрано из фокуса');
+}
+
+/* ── COUNTERS ── */
+function renderCounters(){
+  const g=document.getElementById('cnt-grid');
+  if(!S.counters.length){ g.innerHTML='<div class="empty-st">Нет счётчиков</div>'; return; }
+  g.innerHTML=S.counters.map(c=>{
+    const next=c.tiers.find(t=>t>c.current);
+    const pct=next?Math.min(100,(c.current/next)*100):100;
+    const tHTML=c.tiers.map(t=>`<span class="cnt-tier ${c.current>=t?'hit':''}">${t}</span>`).join('');
+    return`<div class="cnt-card">
+      <div class="cnt-top">
+        <div class="cnt-name">${esc(c.name)}</div>
+        <div class="cnt-ctrl">
+          <div class="cnt-val">${c.current}</div>
+          <button class="btn-plus" onclick="QB.incCnt('${c.id}')">+</button>
+        </div>
+      </div>
+      <div class="cnt-track"><div class="cnt-fill" style="width:${pct}%"></div></div>
+      <div class="cnt-tiers">${tHTML}</div>
+      <div class="cnt-foot"><button class="btn sm" onclick="QB.openEditCnt('${c.id}')">Редактировать</button></div>
+    </div>`;
+  }).join('');
+}
+function openAddCounter(){
+  editCntId=null;
+  document.getElementById('m-cnt-title').textContent='Новый счётчик';
+  document.getElementById('cnt-name').value='';
+  document.getElementById('cnt-tiers').value='5, 15, 30';
+  document.getElementById('cnt-cur').value='0';
+  document.getElementById('cnt-cur-f').style.display='none';
+  document.getElementById('btn-del-cnt').style.display='none';
+  openM('m-cnt');
+}
+function openEditCnt(id){
+  const c=S.counters.find(x=>x.id===id); if(!c) return;
+  editCntId=id;
+  document.getElementById('m-cnt-title').textContent='Редактировать счётчик';
+  document.getElementById('cnt-name').value=c.name;
+  document.getElementById('cnt-tiers').value=c.tiers.join(', ');
+  document.getElementById('cnt-cur').value=c.current;
+  document.getElementById('cnt-cur-f').style.display='block';
+  document.getElementById('btn-del-cnt').style.display='inline-flex';
+  openM('m-cnt');
+}
+function saveCnt(){
+  const name=document.getElementById('cnt-name').value.trim();
+  if(!name){ toast('Введи название'); return; }
+  const tiers=document.getElementById('cnt-tiers').value.split(',').map(t=>parseInt(t.trim())).filter(n=>!isNaN(n)&&n>0).sort((a,b)=>a-b);
+  if(!tiers.length){ toast('Введи тиры'); return; }
+  const cur=parseInt(document.getElementById('cnt-cur').value)||0;
+  if(editCntId){
+    const c=S.counters.find(x=>x.id===editCntId);
+    if(c){ c.name=name; c.tiers=tiers; c.current=cur; }
+    toast('Счётчик обновлён');
+  } else {
+    S.counters.push({id:uid(),name,current:0,tiers});
+    toast('Счётчик добавлен');
+  }
+  commit(); closeM('m-cnt');
+}
+function deleteCnt(){
+  if(!editCntId||!confirm('Удалить счётчик?')) return;
+  S.counters=S.counters.filter(x=>x.id!==editCntId);
+  commit(); closeM('m-cnt'); toast('Удалено');
+}
+function incCnt(id){
+  const c=S.counters.find(x=>x.id===id); if(!c) return;
+  c.current++;
+  const hit=c.tiers.find(t=>t===c.current);
+  commit();
+  if(hit) toast(`🏆 Тир ${hit} достигнут — ${c.name}`);
+}
+
+/* ── BUCKET ── */
+function renderBucket(){
+  const list=document.getElementById('bkt-list');
+  if(!S.bucket.length){ list.innerHTML='<div class="empty-st">Bucket пуст</div>'; return; }
+  list.innerHTML=S.bucket.map(b=>`
+    <div class="bkt-item" data-id="${b.id}" draggable="true"
+      ondragstart="QB.bktDragStart(event,'${b.id}')"
+      ondragover="QB.bktDragOver(event)"
+      ondragleave="QB.bktDragLeave(event)"
+      ondrop="QB.bktDrop(event,'${b.id}')"
+      ondragend="QB.bktDragEnd(event)">
+      <span class="bkt-grip">⠿</span>
+      <span class="bkt-txt">${esc(b.text)}</span>
+      <div class="bkt-act">
+        <button class="btn sm" onclick="QB.bktToAch('${b.id}')">→ В квест</button>
+        <button class="btn sm dn" onclick="QB.delBucket('${b.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+function openAddBucket(){ document.getElementById('bkt-input').focus(); }
+function addBucket(){
+  const inp=document.getElementById('bkt-input');
+  const text=inp.value.trim(); if(!text) return;
+  S.bucket.push({id:uid(),text}); inp.value='';
+  commit();
+}
+function bktKeydown(e){ if(e.key==='Enter') addBucket(); }
+function delBucket(id){ S.bucket=S.bucket.filter(b=>b.id!==id); commit(); }
+function bktToAch(id){ const b=S.bucket.find(x=>x.id===id); if(!b) return; openAddAch({title:b.text}); }
+
+/* ── RECENT ── */
+function renderRecent(){
+  const list=document.getElementById('rec-list');
+  const rec=S.achievements.filter(a=>a.status==='completed')
+    .sort((a,b)=>(b.completedAt||'').localeCompare(a.completedAt||'')).slice(0,5);
+  if(!rec.length){ list.innerHTML='<div class="empty-st">Нет выполненных достижений</div>'; return; }
+  list.innerHTML=rec.map(a=>`
+    <div class="rec-item">
+      <div class="rec-dot" style="background:${axColor(a.axis)}"></div>
+      <div class="rec-title">${esc(a.title)}</div>
+      <div class="rec-axis">${axName(a.axis)}</div>
+      <div class="rec-date">${fmtDate(a.completedAt)}</div>
+    </div>`).join('');
+}
+
+/* ── SEASON ── */
+function openNewSeason(){
+  isNewSeason=true;
+  document.getElementById('m-season-title').textContent='Новый сезон';
+  document.getElementById('s-name').value='';
+  document.getElementById('s-sub').value='';
+  document.getElementById('s-warn').style.display='block';
+  document.getElementById('btn-save-s').textContent='Начать новый сезон';
+  openM('m-season');
+}
+function openEditSeason(){
+  isNewSeason=false;
+  document.getElementById('m-season-title').textContent='Редактировать сезон';
+  document.getElementById('s-name').value=S.season.name;
+  document.getElementById('s-sub').value=S.season.subtitle;
+  document.getElementById('s-warn').style.display='none';
+  document.getElementById('btn-save-s').textContent='Сохранить';
+  openM('m-season');
+}
+function saveSeason(){
+  const name=document.getElementById('s-name').value.trim();
+  const sub=document.getElementById('s-sub').value.trim();
+  if(isNewSeason){
+    if(!name){ toast('Введи название сезона'); return; }
+    if(!confirm('Начать новый сезон? Текущий будет заархивирован.')) return;
+    archiveSeason();
+    S.season.name=name; S.season.subtitle=sub||''; S.season.startedAt=today();
+    S.achievements.forEach(a=>{ a.status='active'; a.completedAt=null; a.pinned=false; });
+    S.counters.forEach(c=>c.current=0);
+    toast('Новый сезон начат!');
+  } else {
+    if(name) S.season.name=name;
+    S.season.subtitle=sub;
+    toast('Сезон обновлён');
+  }
+  commit(); closeM('m-season');
+}
+function archiveSeason(){
+  let arcs=[]; try{ arcs=JSON.parse(localStorage.getItem(ARC)||'[]'); }catch(e){}
+  arcs.push({archivedAt:today(),snapshot:JSON.parse(JSON.stringify(S))});
+  localStorage.setItem(ARC,JSON.stringify(arcs));
+}
+
+/* ── EXPORT / IMPORT ── */
+function exportJSON(){
+  const d=Object.assign({_schema:'Quest Board v1. Keys: season, oath, axes, achievements, counters, bucket.'},S);
+  const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`quest-board-${today()}.json`; a.click();
+  URL.revokeObjectURL(url); toast('Экспорт готов');
+}
+function importClick(){ document.getElementById('import-input').click(); }
+function importJSON(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!confirm('Импорт заменит текущие данные. Продолжить?')) return;
+      S=migrate(data); commit(); toast('Импорт выполнен');
+    }catch(err){ toast('Ошибка: неверный JSON'); }
+  };
+  reader.readAsText(file); e.target.value='';
+}
+
+function migrate(d){
+  d.schemaVersion=d.schemaVersion||1;
+  d.season=d.season||{name:'Сезон',startedAt:today(),subtitle:''};
+  d.season.subtitle=d.season.subtitle||'';
+  d.oath=d.oath||[];
+  d.axes=d.axes||SEED.axes;
+  d.achievements=(d.achievements||[]).map(a=>({
+    id:a.id||uid(),title:a.title||'',description:a.description||'',
+    axis:a.axis||'craft',difficulty:a.difficulty||1,
+    status:a.status||'active',pinned:a.pinned||false,
+    completedAt:a.completedAt||null,note:a.note||'',order:a.order||0
+  }));
+  d.counters=(d.counters||[]).map(c=>({id:c.id||uid(),name:c.name||'',current:c.current||0,tiers:c.tiers||[5,15,30]}));
+  d.bucket=(d.bucket||[]).map(b=>({id:b.id||uid(),text:b.text||''}));
+  return d;
+}
+
+/* ── MODAL ── */
+function openM(id){ document.getElementById(id).classList.add('o'); }
+function closeM(id){ document.getElementById(id).classList.remove('o'); }
+function closeWelcome(){ document.getElementById('welcome').classList.remove('o'); }
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ document.querySelectorAll('.modal-back.o').forEach(m=>m.classList.remove('o')); return; }
+  const active=document.activeElement;
+  const editable=active&&(active.isContentEditable||active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT');
+  if(editable) return;
+  if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key==='z'){ e.preventDefault(); undo(); }
+  if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){ e.preventDefault(); redo(); }
+});
+
+/* ── SEASON NAME CLICK ── */
+document.getElementById('season-name').addEventListener('click',()=>openEditSeason());
+
+/* ── INIT ── */
+function init(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ S=migrate(JSON.parse(raw)); document.getElementById('welcome').classList.remove('o'); }
+    else{ S=JSON.parse(JSON.stringify(SEED)); save(); }
+  }catch(e){ S=JSON.parse(JSON.stringify(SEED)); save(); }
+  // Bootstrap history with initial state
+  history=[JSON.stringify(S)]; histIdx=0; updateUD();
+  render();
+}
+
+return {
+  init, undo, redo,
+  toggleOath, openEditOath, saveOath,
+  openAddAch, openEditAch, setDiff, saveAch, completeAch, reactivateAch, deleteAch, togglePin,
+  achDragStart, achDragOver, achDragLeave, achDrop, achDragEnd,
+  axisDragOver, axisDragLeave, axisDrop,
+  focusDragOver, focusDragLeave, focusDrop,
+  openAddCounter, openEditCnt, saveCnt, deleteCnt, incCnt,
+  addBucket, bktKeydown, delBucket, bktToAch, openAddBucket,
+  bktDragStart, bktDragOver, bktDragLeave, bktDrop, bktDragEnd,
+  openNewSeason, openEditSeason, saveSeason,
+  exportJSON, importClick, importJSON,
+  openM, closeM, closeWelcome
+};
+
+function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+})();
+
+QB.init();
+</script>
+</body>
+</html>
